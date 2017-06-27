@@ -1,3 +1,3 @@
-# 今日头条街拍美图
+# Jiepai
 
-今日头条街拍美图抓取
+Jiepai Pictures of Toutiao
