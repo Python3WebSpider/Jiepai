@@ -42,8 +42,11 @@ def save_image(item):
         response = requests.get(item.get('image'))
         if response.status_code == 200:
             file_path = '{0}/{1}.{2}'.format(item.get('title'), md5(response.content).hexdigest(), 'jpg')
-            with open(file_path, 'wb') as f:
-                f.write(response.content)
+            if not os.path.exists(file_path):
+                with open(file_path, 'wb') as f:
+                    f.write(response.content)
+            else:
+                print('Already Downloaded', file_path)
     except requests.ConnectionError:
         print('Failed to Save Image')
 
