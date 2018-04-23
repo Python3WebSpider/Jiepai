@@ -46,7 +46,9 @@ def save_image(item):
     if not os.path.exists(item.get('title')):
         os.mkdir(item.get('title'))
     try:
-        response = requests.get('http:' + item.get('image'))
+        local_image_url = item.get('image')
+        new_image_url = local_image_url.replace('list','large')
+        response = requests.get('http:' + new_image_url)
         if response.status_code == 200:
             file_path = '{0}/{1}.{2}'.format(item.get('title'), md5(response.content).hexdigest(), 'jpg')
             if not os.path.exists(file_path):
