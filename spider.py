@@ -35,11 +35,12 @@ def get_images(json):
             image_list = item.get('image_list')
             title = item.get('title')
             # print(image_list)
-            for image in image_list:
-                yield {
-                    'image': image.get('url'),
-                    'title': title
-                }
+            if image_list:
+                for image in image_list:
+                    yield {
+                        'image': image.get('url'),
+                        'title': title
+                    }
 
 
 def save_image(item):
