@@ -30,16 +30,21 @@ def get_images(json):
     if json.get('data'):
         data = json.get('data')
         for item in data:
-            if item.get('cell_type') is not None:
+            if item.get("title") is None:
                 continue
-            title = item.get('title')
-            images = item.get('image_list')
-            for image in images:
-                yield {
-                    'image': 'https:' + image.get('url'),
-                    'title': title
-                }
-
+            if item.get('image_list') is not  None:
+                title = item.get('title')
+                if "||" in title:
+                    title = title.replace("||", " ")
+                images = item.get('image_list')
+                for image in images:
+                    url = image.get("url")
+                    largeUrl = url.replace("list","large")
+                    # 生成器
+                    yield {
+                        'image': 'http:' + largeUrl,
+                        'title': title
+                    }
 
 def save_image(item):
     img_path = 'img' + os.path.sep + item.get('title')
@@ -54,7 +59,7 @@ def save_image(item):
             if not os.path.exists(file_path):
                 with open(file_path, 'wb') as f:
                     f.write(resp.content)
-                print('Downloaded image path is %s' % file_path)
+                print('Downloaded image,save_path is %s' % file_path)
             else:
                 print('Already Downloaded', file_path)
     except requests.ConnectionError:
@@ -68,12 +73,9 @@ def main(offset):
         save_image(item)
 
 
-GROUP_START = 0
-GROUP_END = 7
-
 if __name__ == '__main__':
     pool = Pool()
-    groups = ([x * 20 for x in range(GROUP_START, GROUP_END + 1)])
+    groups = ([x * 20 for x in range(0, 8)])
     pool.map(main, groups)
     pool.close()
     pool.join()
