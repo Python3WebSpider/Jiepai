@@ -4,6 +4,7 @@ from requests import codes
 import os
 from hashlib import md5
 from multiprocessing.pool import Pool
+import re
 
 
 def get_page(offset):
@@ -35,8 +36,9 @@ def get_images(json):
             title = item.get('title')
             images = item.get('image_list')
             for image in images:
+                origin_image = re.sub("list", "origin"，image.get('url')
                 yield {
-                    'image': 'https:' + image.get('url'),
+                    'image': 'https:' + origin_image,
                     'title': title
                 }
 
