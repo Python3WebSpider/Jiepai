@@ -8,4 +8,4 @@ Jiepai Pictures of Toutiao
 
 ## 2019/2/18 更新
 
-感谢 @[zhengbeiandy](/zhengbeiandy) @joeytai https://github.com/Python3WebSpider/Jiepai/issues/13 的贡献
+感谢 @zhengbeiandy @joeytai https://github.com/Python3WebSpider/Jiepai/issues/13 的贡献
