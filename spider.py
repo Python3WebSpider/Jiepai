@@ -5,49 +5,77 @@ import os
 from hashlib import md5
 from multiprocessing.pool import Pool
 import re
+import json
+from bs4 import BeautifulSoup
+
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
+}
 
 
-def get_page(offset):
+def get_page_index(offset, keyword):
     params = {
         'aid': '24',
         'offset': offset,
         'format': 'json',
-        #'keyword': '街拍',
+        'keyword': '街拍',
         'autoload': 'true',
         'count': '20',
         'cur_tab': '1',
         'from': 'search_tab',
         'pd': 'synthesis'
     }
-    base_url = 'https://www.toutiao.com/api/search/content/?keyword=%E8%A1%97%E6%8B%8D'
-    url = base_url + urlencode(params)
+    base_url = 'https://www.toutiao.com/api/search/content/'
     try:
-        resp = requests.get(url)
-        print(url)
-        if 200  == resp.status_code:
-            print(resp.json())
-            return resp.json()
+        response = requests.get(base_url, params=params, headers=headers)
+        print(response.url)
+        if 200 == response.status_code:
+            print(response.json())
+            return response.json()
+
+        return None
     except requests.ConnectionError:
         return None
 
 
-def get_images(json):
-    if json.get('data'):
-        data = json.get('data')
-        for item in data:
-            if item.get('cell_type') is not None:
-                continue
-            title = item.get('title')
-            images = item.get('image_list')
-            for image in images:
-                origin_image = re.sub("list", "origin", image.get('url'))
-                yield {
-                    'image':  origin_image,
-                    # 'iamge': image.get('url'),
-                    'title': title
+def parse_page_index(data):
+    if data and 'data' in data.keys():
+        for item in data.get('data'):
+            if item.get('article_url'):
+                yield item.get('article_url')
+
+
+def get_page_detail(url):
+    try:
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            return response.text
+        return None
+    except requests.ConnectionError:
+        return None
+
+
+def parse_page_detail(html):
+    soup = BeautifulSoup(html, 'lxml')
+    title = soup.select('title')[0].get_text()
+    images_pattern = re.compile('gallery:\sJSON.parse\((.*?)\),', re.S)
+    result = re.search(images_pattern, html)
+    if result:
+        try:
+            data = json.loads(json.loads(result.group(1)))
+            if data and 'sub_images' in data.keys():
+                sub_images = data.get('sub_images')
+                images = [item['url'] for item in sub_images]
+                return {
+                    'title': title,
+                    'images': images
                 }
+        except JSONDecodeError:
+            print('Json error')
+
 
 print('succ')
+
 
 def save_image(item):
     img_path = 'img' + os.path.sep + item.get('title')
@@ -55,28 +83,33 @@ def save_image(item):
     if not os.path.exists(img_path):
         os.makedirs(img_path)
     try:
-        resp = requests.get(item.get('image'))
-        if codes.ok == resp.status_code:
-            file_path = img_path + os.path.sep + '{file_name}.{file_suffix}'.format(
-                file_name=md5(resp.content).hexdigest(),
-                file_suffix='jpg')
-            if not os.path.exists(file_path):
-                print('succ3')
-                with open(file_path, 'wb') as f:
-                    f.write(resp.content)
-                print('Downloaded image path is %s' % file_path)
-                print('succ4')
-            else:
-                print('Already Downloaded', file_path)
+        for image in item.get('images'):
+            response = requests.get(image, headers=headers)
+            if codes.ok == response.status_code:
+                file_path = img_path + os.path.sep + '{file_name}.{file_suffix}'.format(
+                    file_name=md5(response.content).hexdigest(),
+                    file_suffix='jpg')
+                if not os.path.exists(file_path):
+                    print('succ3')
+                    with open(file_path, 'wb') as f:
+                        f.write(response.content)
+                    print('Downloaded image path is %s' % file_path)
+                    print('succ4')
+                else:
+                    print('Already Downloaded', file_path)
     except requests.ConnectionError:
         print('Failed to Save Image，item %s' % item)
 
 
-def main(offset):
-    json = get_page(offset)
-    for item in get_images(json):
-        print(item)
-        save_image(item)
+def main(offset, keyword='街拍'):
+    html = get_page_index(offset, keyword)
+    for url in parse_page_index(html):
+        print(url)
+        html = get_page_detail(url)
+        if html:
+            item = parse_page_detail(html)
+            if item:
+                save_image(item)
 
 
 GROUP_START = 0
