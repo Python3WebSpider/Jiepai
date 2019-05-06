@@ -4,23 +4,23 @@ from requests import codes
 import os
 from hashlib import md5
 from multiprocessing.pool import Pool
-import re
 
 
 def get_page(offset):
     params = {
         'aid': '24',
+        'app_name': 'web_search',
         'offset': offset,
         'format': 'json',
-        #'keyword': '街拍',
         'autoload': 'true',
         'count': '20',
+        'en_qc': ' 1',
         'cur_tab': '1',
         'from': 'search_tab',
-        'pd': 'synthesis'
+        'pd': 'synthesis',
     }
-    base_url = 'https://www.toutiao.com/api/search/content/?keyword=%E8%A1%97%E6%8B%8D'
-    url = base_url + urlencode(params)
+
+    url = 'https://www.toutiao.com/api/search/content/?keyword=街拍'+ urlencode(params)
     try:
         resp = requests.get(url)
         print(url)
@@ -40,11 +40,12 @@ def get_images(json):
             title = item.get('title')
             images = item.get('image_list')
             for image in images:
-                origin_image = re.sub("list", "origin", image.get('url'))
+
                 yield {
-                    'image':  origin_image,
+                    'image': image.get('url'),
                     # 'iamge': image.get('url'),
                     'title': title
+
                 }
 
 print('succ')
@@ -80,7 +81,7 @@ def main(offset):
 
 
 GROUP_START = 0
-GROUP_END = 7
+GROUP_END = 20
 
 if __name__ == '__main__':
     pool = Pool()
