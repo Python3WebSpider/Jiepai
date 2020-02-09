@@ -13,3 +13,7 @@ Jiepai Pictures of Toutiao
 ## 2019/7/29 更新
 
 感谢 @Anodsaber https://github.com/Python3WebSpider/Jiepai/issues/21 的贡献
+
+## 2020/2/10 更新
+
+感谢 @siuszy https://github.com/Python3WebSpider/Jiepai/issues/25 的贡献
